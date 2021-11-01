@@ -1,0 +1,344 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<title>商品评论</title>
+<link rel="stylesheet" type="text/css"
+	href="easyui/themes/default/easyui.css">
+<link rel="stylesheet" type="text/css" href="easyui/themes/icon.css">
+<script type="text/javascript" src="easyui/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="easyui/locale/easyui-lang-zh_CN.js"></script>
+</head>
+<body>
+<table id="tt" class="easyui-datagrid" style="widht:80%" 
+data-options="url:'productreview',queryParams:{method:'list'},pagination:true,fitColumns:true,singleSelect:false">
+	
+</table>
+
+<!-- 操作栏 -->
+<script type="text/javascript">
+$("table").datagrid({
+	toolbar:[{
+		iconCls:'icon-add',
+		text:'添加',
+		handler:function(){
+			$("#userAdd").window('open');
+		}
+	},{
+		text:'编辑',
+		handler:function(){
+			//判断商品是否选择了数据
+			//获取选择行，如果没有选择，返回null
+			var selected = $("#tt").datagrid('getSelected');
+			if(selected==null){
+				$.messager.alert("提示","没有选择任何数据");
+				return;//结束方法
+			}
+			//到这里说明已经选择好了数据
+			//根据userId加载商品信息
+			$.ajax({
+				type:"GET",
+				url:"productreview?method=queryById&id="+selected.id,
+				success: function(res){
+					//显示窗体
+					$("#userEditWin").window('open');
+					//回显数据
+					$("#ffUserEdit").form('load',{
+						method:'edit',
+						id: res.id,
+						information: res.information,
+						userName: res.userName,
+						productScore: res.productScore,
+						serviceScore:res.serviceScore,
+						status: res.status,
+						content:res.content,
+						reply:res.reply,
+						datetime:res.datetime
+					});
+				}
+			});
+		}
+	},{
+		iconCls:'icon-remove',
+		text:'删除',
+		handler:function(){
+			//判断商品是否选择了数据
+			//获取选择行，如果没有选择，返回null
+			var selected = $("#tt").datagrid('getSelected');
+			if(selected==null){
+				$.messager.alert("提示","没有选择任何数据");
+				return;//结束方法
+			}
+			//让商品确认是否删除
+			$.messager.confirm('确认对话框', '您确定要删除用户:['+selected.userName+']的评论', function(r){
+			    if (r){
+			      	//确认删除
+			      	$.ajax({
+			      		type:"GET",
+			      		url:"productreview?method=delete&id="+selected.id,
+			      		success:function(){
+			      			//刷新表格
+			      			$("#tt").datagrid('reload');
+			      		}
+			      	});
+			    }
+			});
+		}
+	},"-",{
+		iconCls:'icon-help',
+		handler:function(){alert('帮助');}
+	}]
+});
+</script>
+
+
+
+<!-- 添加弹窗 -->
+	<div id="userAdd" class="easyui-window" title="添加商品" style="width:600px;height:592px;" data-options="iconCls:'icon-edit',modal:true,closed:true">
+		<div class="easyui-panel"  style="width:100%;max-width:600px;padding:30px 60px;">
+		<!-- 这里的编辑表单和添加图书的表单是一模一样的 -->
+		<form id="ffUser" method="post" action="productreview">
+			<input type="hidden" name="method" value="save"/>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="information" style="width:100%" 
+				data-options="label:'商品信息:',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="userName" style="width:100%" 
+				data-options="label:'用户名称：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="productScore" style="width:100%" 
+				data-options="label:'商品评分：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="serviceScore" style="width:100%" 
+				data-options="label:'服务评分：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="content" style="width:100%" 
+				data-options="label:'评价内容：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="reply" style="width:100%" 
+				data-options="label:'回复内容：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="datetime" style="width:100%" 
+				data-options="label:'评价时间：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<select id="status" name="status" style="width:100%"  label="商品状态" class="easyui-combobox">
+					<option value='1'>正常</option>
+					<option value='2'>禁用</option>
+					<option value='3'>删除</option>
+				</select>
+			</div>
+		</form>
+		<div style="text-align:center;padding:5px 0">
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="addSubmit()" style="width:80px">提交</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="bbb()" style="width:80px">重置</a>
+		</div>
+		</div>
+	</div>
+	
+	<script type="text/javascript">
+	function addSubmit(){
+		$('#ffUser').form('submit',{
+			success:function(res){//这里的res就是后端输出的0或者1
+				if(res=='1'){
+					$.messager.alert('消息','添加成功','info');
+					//$('#ffUser').form('clear');
+					
+					$('#ffUser').form('reset');
+					//关闭窗体
+					$("#userAdd").window('close');
+					//刷新列表
+					$("#tt").datagrid("reload");
+				}else{
+					$.messager.alert('警告','添加失败');
+				}
+			}
+		});
+	}
+	function bbb(){
+		$('#ffUser').form('reset');
+	}
+	
+	
+	
+	
+	
+	
+</script>
+	
+
+
+	<!-- 编辑弹窗 -->
+	<div id="userEditWin" class="easyui-window" title="编辑商品" style="width:600px;height:592px;" data-options="iconCls:'icon-edit',modal:true,closed:true">
+		<div class="easyui-panel"  style="width:100%;max-width:600px;padding:30px 60px;">
+		<!-- 这里的编辑表单和添加图书的表单是一模一样的 -->
+		<form id="ffUserEdit" method="post" action="productreview">
+			<input type="hidden" name="method" value="edit"/>
+			<input type="hidden" name="id"/>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="information" style="width:100%" 
+				data-options="label:'商品信息:',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="userName" style="width:100%" 
+				data-options="label:'用户名称：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="productScore" style="width:100%" 
+				data-options="label:'商品评分：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="serviceScore" style="width:100%" 
+				data-options="label:'服务评分：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="content" style="width:100%" 
+				data-options="label:'评价内容：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="reply" style="width:100%" 
+				data-options="label:'回复内容：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="datetime" style="width:100%" 
+				data-options="label:'评价时间：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<select id="status" name="status" style="width:100%"  label="商品状态" class="easyui-combobox">
+					<option value='1'>正常</option>
+					<option value='2'>禁用</option>
+					<option value='3'>删除</option>
+				</select>
+			</div>
+		</form>
+		<div style="text-align:center;padding:5px 0">
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="Editsubmit()" style="width:80px">提交</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="Editclear()" style="width:80px">重置</a>
+		</div>
+		</div>
+	</div>
+	
+	<script>
+		function Editsubmit(){
+			$('#ffUserEdit').form('submit',{
+				success:function(res){//这里的res就是后端输出的0或者1
+					if(res=='0'){
+						$.messager.alert('警告','编辑失败');
+					}else if(res=='1'){
+						$.messager.alert('消息','编辑成功','info');
+						$('#ffUserEdit').form('reset');
+						//关闭窗体
+						$("#userEditWin").window('close');
+						//刷新列表
+						$("#tt").datagrid("reload");
+					}
+				}
+			});
+		}
+		function Editclear(){
+			$('#ffUserEdit').form('reset');
+		}
+	</script>
+	
+	
+	
+	
+	
+<!-- 数据显示 -->
+<script type="text/javascript">
+$('#tt').datagrid({
+	columns:[[
+		{field:'id',title:'ID', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					return value;
+				}
+			}
+		},
+		{field:'information',title:'商品信息', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					return value;
+				}
+			}
+		},
+		{field:'userName',title:'用户名称', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					return value;
+				}
+			}
+		},
+		{field:'productScore',title:'商品评分', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					return value/100;
+				}
+			}
+		},
+		{field:'serviceScore',title:'服务评分', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					return value;
+				}
+			}
+		},
+		{field:'content',title:'评价内容', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					return  value;
+				}
+			}
+		},
+		{field:'reply',title:'回复内容', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					return  value;
+				}
+			}
+		},
+		{field:'datetime',title:'评价时间', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					return  value;
+				}
+			}
+		},
+		{field:'status',title:'状态', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					if(value==1){return '正常'} 
+					else if(value==2){return '禁用'} 
+					else if(value==3){return '删除'}
+				}
+			}
+		}
+	]]
+	
+});
+</script>
+</body>
+</html>

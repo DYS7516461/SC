@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" type="text/css"
+	href="easyui/themes/default/easyui.css">
+<link rel="stylesheet" type="text/css" href="easyui/themes/icon.css">
+<script type="text/javascript" src="easyui/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="easyui/locale/easyui-lang-zh_CN.js"></script>
+</head>
+<body>
+	<div class="easyui-panel" title="添加商品" style="width:100%;max-width:400px;padding:30px 60px;">
+		<form id="ff" method="post" action="goods">
+			<!-- 填写提交表单之后要执行的方法的名字 -->
+			<input type="hidden" name="method" value="save"/>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="goodsname" style="width:100%" 
+				data-options="label:'商品名称',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="goodsprice" style="width:100%" 
+				data-options="label:'商品价格',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="goodsnumber" style="width:100%" 
+				data-options="label:'商品数量',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<select class="easyui-combobox" style="width:100%"  name="goodsstate" label="状态">
+					<option value="1">正常</option>
+					<option value="2">禁用</option>
+				</select>
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="goodstime" style="width:100%" 
+				data-options="label:'商品时间',required:true">
+			</div>
+		</form>
+		<div style="text-align:center;padding:5px 0">
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="submitForm()" style="width:80px">提交</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm()" style="width:80px">重置</a>
+		</div>
+	</div>
+	<script>
+		function submitForm(){
+			$('#ff').form('submit',{
+				success:function(res){//这里的res就是后端输出的0或者1
+					if(res=='1'){
+						$.messager.alert('消息','添加成功','info');
+						$('#ff').form('clear');
+					}else{
+						$.messager.alert('警告','添加失败');
+					}
+				}
+			});
+		}
+		function clearForm(){
+			$('#ff').form('clear');
+		}
+	</script>
+	
+
+
+</body>
+</html>

@@ -1,0 +1,355 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<title>等级等级</title>
+<link rel="stylesheet" type="text/css"
+	href="easyui/themes/default/easyui.css">
+<link rel="stylesheet" type="text/css" href="easyui/themes/icon.css">
+<script type="text/javascript" src="easyui/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="easyui/locale/easyui-lang-zh_CN.js"></script>
+</head>
+<body>
+<table id="tt" class="easyui-datagrid" style="widht:80%" 
+data-options="url:'userlevel',queryParams:{method:'list'},pagination:true,fitColumns:true,singleSelect:false">
+</table>
+
+<!-- 操作栏 -->
+<script type="text/javascript">
+$("table").datagrid({
+	toolbar:[{
+		iconCls:'icon-add',
+		text:'添加',
+		handler:function(){
+			$("#UserLevelAdd").window('open');
+		}
+	},{
+		iconCls:'icon-edit',
+		text:'编辑',
+		handler:function(){
+			//判断等级是否选择了数据
+			//获取选择行，如果没有选择，返回null
+			var selected = $("#tt").datagrid('getSelected');
+			if(selected==null){
+				$.messager.alert("提示","没有选择任何数据");
+				return;//结束方法
+			}
+			//到这里说明已经选择好了数据
+			//根据UserLevelId加载等级信息
+			$.ajax({
+				type:"GET",
+				url:"userlevel?method=queryById&id="+selected.id,
+				success: function(res){
+					//显示窗体
+					$("#UserLevelEditWin").window('open');
+					//回显数据
+					$("#ffUserLevelEdit").form('load',{
+						method:'edit',
+						id: res.id,
+						name: res.name,
+						discount: res.discount,
+						grade: res.grade,
+						status: res.status,
+						icon: res.icon//,
+						//isShow:(res.isShow=='1'?true:false)
+					});
+					//设置状态
+					$("#isShowID").switchbutton(res.isShow=='1'?'check':'uncheck');
+					//绑定值
+					$("#isShowID").switchbutton('setValue',res.isShow);
+				}
+			});
+		}
+	},{
+		iconCls:'icon-remove',
+		text:'删除',
+		handler:function(){
+			//判断等级是否选择了数据
+			//获取选择行，如果没有选择，返回null
+			var selected = $("#tt").datagrid('getSelected');
+			if(selected==null){
+				$.messager.alert("提示","没有选择任何数据");
+				return;//结束方法
+			}
+			//让等级确认是否删除
+			$.messager.confirm('确认对话框', '您确定要删除等级:['+selected.name+']', function(r){
+			    if (r){
+			      	//确认删除
+			      	$.ajax({
+			      		type:"GET",
+			      		url:"userlevel?method=delete&id="+selected.id,
+			      		success:function(){
+			      			//刷新表格
+			      			$("#tt").datagrid('reload');
+			      		}
+			      	});
+			    }
+			});
+		}
+	},"-",{
+		iconCls:'icon-help',
+		handler:function(){alert('帮助');}
+	}]
+});
+</script>
+
+
+<!-- 显示  -->
+<script type="text/javascript">
+$('#tt').datagrid({
+	columns:[[
+		{field:'id',title:'ID', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.UserLevel){
+					return row.UserLevel.name;
+				} else {
+					return value;
+				}
+			}
+		},
+		{field:'icon',title:'等级图标', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.UserLevel){
+					return row.UserLevel.name;
+				} else {
+					return '<img src='+value+' height="50px" width="50px" />';
+				}
+			}
+		},
+		{field:'grade',title:'等级', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.UserLevel){
+					return row.UserLevel.name;
+				} else {
+					return value;
+				}
+			}
+		},
+		{field:'name',title:'等级名称', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.UserLevel){
+					return row.UserLevel.name;
+				} else {
+					return value;
+				}
+			}
+		},
+		{field:'discount',title:'享受折扣(%)', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.UserLevel){
+					return row.UserLevel.name;
+				} else {
+					return value;
+				}
+			}
+		},
+		{field:'isShow',title:'是否显示',align : 'center', width:"10%",
+			formatter: function(value,row,index){
+				if(value=='0'||null == value){
+                    return "<input id="+row.id+" class=\"my easyui-switchbutton\" οnclick=m1(this, row.id) data-options=\"onText:'显示',offText:'隐藏'\">" 
+                }else if(value=='1'){
+                    return "<input id="+row.id+" checked class=\"my easyui-switchbutton\" οnclick=m2() data-options=\"onText:'显示',offText:'隐藏'\">" 
+                }
+			}
+		},
+		{field:'status',title:'状态', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					if(value==1){return '正常'} 
+					else if(value==2){return '禁用'} 
+					else if(value==3){return '删除'}
+				}
+			}
+		}
+	]],
+	onLoadSuccess:function(){
+		//$.parser.parse();
+		$('.my').switchbutton({
+			onChange:function(checked){
+				var isShow = 1;
+				if(checked){
+					isShow=1;
+				}else{
+					isShow=0;
+				}
+				
+				var mapobj={
+						"id":$(this).attr("id"),
+						"isShow":isShow
+				};
+				$.ajax({
+					type:"POST",
+					url:"userlevel?method=IsShow",
+					data:mapobj,
+					success:function(data){
+						if(data.success){
+							$CommonUI.getDataGrid("datagrid_company").datagrid('relod');
+							$CommonUI.alert(data.message);
+						}
+					}
+						
+				});
+			}
+		})
+	}
+	
+});
+</script>
+
+
+<!-- 添加弹窗 -->
+	<div id="UserLevelAdd" class="easyui-window" title="添加等级" style="width:600px;height:442px;" data-options="iconCls:'icon-edit',modal:true,closed:true">
+		<div class="easyui-panel"  style="width:100%;max-width:600px;padding:30px 60px;">
+		<!-- 这里的编辑表单和添加图书的表单是一模一样的 -->
+		<form id="ffUserLevel" method="post" action="userlevel">
+			<input type="hidden" name="method" value="save"/>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="grade" style="width:100%" 
+				data-options="label:'等级:',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="name" style="width:100%" 
+				data-options="label:'等级名称：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="icon" style="width:100%" 
+				data-options="label:'等级图标：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="discount" style="width:100%" 
+				data-options="label:'享受折扣(%)：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-switchbutton" id="isShowIDadd" value="0" name='isShow' label='是否显示：'
+				data-options="onText:'显示',offText:'隐藏'">
+			</div>
+			<div style="margin-bottom:20px">
+				<select id="status" name="status" style="width:100%"  label="用户状态" class="easyui-combobox">
+					<option value='1'>正常</option>
+					<option value='2'>禁用</option>
+					<option value='3'>删除</option>
+				</select>
+			</div>
+		</form>
+		<div style="text-align:center;padding:5px 0">
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="addSubmit()" style="width:80px">提交</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="bbb()" style="width:80px">重置</a>
+		</div>
+		</div>
+	</div>
+	
+	<script type="text/javascript">
+	function addSubmit(){
+		$('#ffUserLevel').form('submit',{
+			success:function(res){//这里的res就是后端输出的0或者1
+				if(res=='1'){
+					$.messager.alert('消息','添加成功','info');
+					//$('#ffUserLevel').form('clear');
+					
+
+					$('#ffUserLevel').form('reset');
+					//关闭窗体
+					$("#UserLevelAdd").window('close');
+					//刷新列表
+					$("#tt").datagrid("reload");
+				}else{
+					$.messager.alert('警告','添加失败');
+				}
+			}
+		});
+	}
+	function bbb(){
+		$('#ffUserLevel').form('reset');
+	}
+	 $(function(){
+	       $('#isShowIDadd').switchbutton({
+	           onChange: function(checked){
+	        	   $("#isShowIDadd").switchbutton('setValue',checked==true? 1:0);
+	           }
+	       })
+	   })
+	
+</script>
+
+
+<!-- 编辑弹窗 -->
+	<div id="UserLevelEditWin" class="easyui-window" title="编辑等级"
+		style="width: 600px; height: 442px;"
+		data-options="iconCls:'icon-edit',modal:true,closed:true">
+		<div class="easyui-panel"
+			style="width: 100%; max-width: 600px; padding: 30px 60px;">
+			<!-- 这里的编辑表单和添加图书的表单是一模一样的 -->
+			<form id="ffUserLevelEdit" method="post" action="userlevel">
+				<input type="hidden" name="method" value="edit" />
+				<input type="hidden" name="id"  />
+				<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="grade" style="width:100%" 
+				data-options="label:'等级:',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="name" style="width:100%" 
+				data-options="label:'等级名称：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="icon" style="width:100%" 
+				data-options="label:'等级图标：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="discount" style="width:100%" 
+				data-options="label:'享受折扣(%)：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-switchbutton" id="isShowID" name='isShow' label='是否显示：'
+				data-options="onText:'显示',offText:'隐藏'">
+			</div>
+			<div style="margin-bottom:20px">
+				<select id="status" name="status" style="width:100%"  label="用户状态" class="easyui-combobox">
+					<option value='1'>正常</option>
+					<option value='2'>禁用</option>
+					<option value='3'>删除</option>
+				</select>
+			</div>
+			</form>
+			<div style="text-align: center; padding: 5px 0">
+				<a href="javascript:void(0)" class="easyui-linkbutton"
+					onclick="Editsubmit()" style="width: 80px">提交</a> 
+				<a href="javascript:void(0)" class="easyui-linkbutton"
+					onclick="Editclear()" style="width: 80px">重置</a>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		function Editsubmit() {
+			$('#ffUserLevelEdit').form('submit', {
+				success : function(res) {//这里的res就是后端输出的0或者1
+					if (res == '0') {
+						$.messager.alert('警告', '编辑失败');
+					} else if (res == '1') {
+						$.messager.alert('消息', '编辑成功', 'info');
+						$('#ffUserLevelEdit').form('reset');
+						//关闭窗体
+						$("#UserLevelEditWin").window('close');
+						//刷新列表
+						$("#tt").datagrid("reload");
+					}
+				}
+			});
+		}
+		function Editclear() {
+			$('#ffUserLevelEdit').form('reset');
+		}
+		 $(function(){
+		       $('#isShowID').switchbutton({
+		           onChange: function(checked){
+		        	   $("#isShowID").switchbutton('setValue',checked==true? 1:0);
+		           }
+		       })
+		   })
+		
+	</script>
+
+
+</body>
+</html>

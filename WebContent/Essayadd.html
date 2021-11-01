@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" type="text/css"
+	href="easyui/themes/default/easyui.css">
+<link rel="stylesheet" type="text/css" href="easyui/themes/icon.css">
+<script type="text/javascript" src="easyui/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="easyui/locale/easyui-lang-zh_CN.js"></script>
+</head>
+<body>
+	<div class="easyui-panel" title="添加文章" style="width:100%;max-width:450px;padding:30px 60px;">
+		<form id="ff" method="post" action="essay">
+		<input type = "hidden" name = "method" value = "save"></input>
+			<!-- 填写提交表单之后要执行的方法的名字 -->
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="essayid" style="width:100%" 
+				data-options="label:'文章ID：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="essaytitle" style="width:100%" 
+				data-options="label:'文章标题：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="essayclassify" style="width:100%" 
+				data-options="label:'文章分类：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="essayview" style="width:100%" 
+				data-options="label:'浏览量：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="essayauthor" style="width:100%" 
+				data-options="label:'文章作者：',required:true">
+			</div>
+			<input type="hidden" name="method" value="save"/>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="essayintro" style="width:100%" 
+				data-options="label:'文章简介：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="turnovertime" style="width:100%" 
+				data-options="label:'发表时间：',required:true">
+			</div>
+
+		</form>
+		<div style="text-align:center;padding:5px 0">
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="submitForm()" style="width:80px">提交</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm()" style="width:80px">重置</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="returns()" style="width:80px">返回</a>
+		</div>
+	</div>
+	<script>
+		
+		function submitForm(){
+			$('#ff').form('submit',{
+				success:function(res){//这里的res就是后端输出的0或者1
+					if(res=='1'){
+						$.messager.alert('消息','添加成功','info');	
+						$("#content").load("Essayadd.html");
+					}else{
+						$.messager.alert('警告','添加失败');
+					}
+				}
+			});
+		}
+		function clearForm(){
+			$('#ff').form('clear');
+		}
+		function returns(){
+			$("#content").load("Essaylist.html");
+		}
+	</script>
+	
+
+
+</body>
+</html>

@@ -1,0 +1,500 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<title>用户管理</title>
+<link rel="stylesheet" type="text/css"
+	href="easyui/themes/default/easyui.css">
+<link rel="stylesheet" type="text/css" href="easyui/themes/icon.css">
+<script type="text/javascript" src="easyui/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="easyui/locale/easyui-lang-zh_CN.js"></script>
+</head>
+<body>
+<table id="tt" class="easyui-datagrid" style="widht:80%" 
+data-options="url:'user',queryParams:{method:'list'},pagination:true,fitColumns:true,singleSelect:false">
+	
+</table>
+
+<!-- 操作栏 -->
+<script type="text/javascript">
+$("table").datagrid({
+	toolbar:[{
+		iconCls:'icon-add',
+		text:'添加',
+		handler:function(){
+			$("#userAdd").window('open');
+		}
+	},{
+		iconCls:'icon-edit',
+		text:'编辑',
+		handler:function(){
+			//判断用户是否选择了数据
+			//获取选择行，如果没有选择，返回null
+			var selected = $("#tt").datagrid('getSelected');
+			if(selected==null){
+				$.messager.alert("提示","没有选择任何数据");
+				return;//结束方法
+			}
+			//到这里说明已经选择好了数据
+			//根据userId加载用户信息
+			$.ajax({
+				type:"GET",
+				url:"user?method=queryById&uid="+selected.uid,
+				success: function(res){
+					//显示窗体
+					$("#userEditWin").window('open');
+					//回显数据
+					$("#ffUserEdit").form('load',{
+						method:'edit',
+						uid: res.uid,
+						Name: res.Name,
+						Level: res.Level,
+						Balance: (res.Balance)/100,
+						Integral:(res.Integral)/100,
+						status: res.status,
+						phone:res.phone,
+						UserType:res.UserType,
+						UserGroup:res.UserGroup,
+						UserLabel:res.UserLabel
+					});
+				}
+			});
+		}
+	},{
+		iconCls:'icon-remove',
+		text:'删除',
+		handler:function(){
+			//判断用户是否选择了数据
+			//获取选择行，如果没有选择，返回null
+			var selected = $("#tt").datagrid('getSelected');
+			if(selected==null){
+				$.messager.alert("提示","没有选择任何数据");
+				return;//结束方法
+			}
+			//让用户确认是否删除
+			$.messager.confirm('确认对话框', '您确定要删除用户:['+selected.Name+']', function(r){
+			    if (r){
+			      	//确认删除
+			      	$.ajax({
+			      		type:"GET",
+			      		url:"user?method=delete&uid="+selected.uid,
+			      		success:function(){
+			      			//刷新表格
+			      			$("#tt").datagrid('reload');
+			      		}
+			      	});
+			    }
+			});
+		}
+	},"-",
+	{
+		text:'批量设置分组',
+		handler:function(){
+			//判断用户是否选择了数据
+			//获取选择行，如果没有选择，返回null
+			var selections = $("#tt").datagrid('getSelections');
+			if(selections.length==0){
+				$.messager.alert("提示","没有选择任何数据");
+				return;//结束方法
+			}
+			//弹窗
+			$("#usersSetGroupWin").window('open');
+			//将所有选择的学生的id加入到隐藏域中
+			var uids = '';
+			for(var i = 0;i<selections.length;i++){
+				if(i==selections.length-1){
+					uids += selections[i].uid;
+				}else{
+					uids += selections[i].uid+",";
+				}
+			}
+			$("#uids").val(uids);
+		}
+	},"-",
+	{
+		text:'批量设置标签',
+		handler:function(){
+			//判断用户是否选择了数据
+			//获取选择行，如果没有选择，返回null
+			var selections = $("#tt").datagrid('getSelections');
+			if(selections.length==0){
+				$.messager.alert("提示","没有选择任何数据");
+				return;//结束方法
+			}
+			//弹窗
+			$("#usersSetLabelWin").window('open');
+			//将所有选择的学生的id加入到隐藏域中
+			var uidss = '';
+			for(var i = 0;i<selections.length;i++){
+				if(i==selections.length-1){
+					uidss += selections[i].uid;
+				}else{
+					uidss += selections[i].uid+",";
+				}
+			}
+			$("#uidss").val(uidss);
+		}
+	},
+	"-",{
+		iconCls:'icon-help',
+		handler:function(){alert('帮助');}
+	}]
+});
+</script>
+
+
+
+<!-- 添加弹窗 -->
+	<div id="userAdd" class="easyui-window" title="添加用户" style="width:600px;height:592px;" data-options="iconCls:'icon-edit',modal:true,closed:true">
+		<div class="easyui-panel"  style="width:100%;max-width:600px;padding:30px 60px;">
+		<!-- 这里的编辑表单和添加图书的表单是一模一样的 -->
+		<form id="ffUser" method="post" action="user">
+			<input type="hidden" name="method" value="save"/>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="Name" style="width:100%" 
+				data-options="label:'用户姓名:',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="Balance" style="width:100%" 
+				data-options="label:'用户余额：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="Integral" style="width:100%" 
+				data-options="label:'用户积分：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="phone" style="width:100%" 
+				data-options="label:'用户电话：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input id=LevelId style="width:100%" label="用户等级" name="Level" 
+				class="easyui-combobox" 
+					data-options="url:'user?method=userLevelList',valueField:'id',textField:'text'">
+			</div>
+			<div style="margin-bottom:20px">
+				<select name="UserType" label="用户类型:" style="width:100%" class="easyui-combobox">
+					<option value="1">微信公众号用户</option>
+					<option value="2">微信小程序用户</option>
+					<option value="3">H5用户</option>
+				</select>
+			</div>
+			<div style="margin-bottom:20px">
+				<input id=LevelId style="width:100%" label="用户分组" name="UserGroup" 
+				class="easyui-combobox" 
+					data-options="url:'user?method=userGroupList',valueField:'id',textField:'text'">
+			</div>
+			<div style="margin-bottom:20px">
+				<input id=LevelId style="width:100%" label="用户标签" name="UserLabel" 
+				class="easyui-combobox" 
+					data-options="url:'user?method=userLabelList',valueField:'id',textField:'text'">
+			</div>
+			<div style="margin-bottom:20px">
+				<select id="status" name="status" style="width:100%"  label="用户状态" class="easyui-combobox">
+					<option value='1'>正常</option>
+					<option value='2'>禁用</option>
+					<option value='3'>删除</option>
+				</select>
+			</div>
+		</form>
+		<div style="text-align:center;padding:5px 0">
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="addSubmit()" style="width:80px">提交</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="bbb()" style="width:80px">重置</a>
+		</div>
+		</div>
+	</div>
+	
+	<script type="text/javascript">
+	function addSubmit(){
+		$('#ffUser').form('submit',{
+			success:function(res){//这里的res就是后端输出的0或者1
+				if(res=='1'){
+					$.messager.alert('消息','添加成功','info');
+					//$('#ffUser').form('clear');
+					
+					$('#ffUser').form('reset');
+					//关闭窗体
+					$("#userAdd").window('close');
+					//刷新列表
+					$("#tt").datagrid("reload");
+				}else{
+					$.messager.alert('警告','添加失败');
+				}
+			}
+		});
+	}
+	function bbb(){
+		$('#ffUser').form('reset');
+	}
+	
+	
+	
+	
+	
+	
+</script>
+	
+
+
+	<!-- 编辑弹窗 -->
+	<div id="userEditWin" class="easyui-window" title="编辑用户" style="width:600px;height:592px;" data-options="iconCls:'icon-edit',modal:true,closed:true">
+		<div class="easyui-panel"  style="width:100%;max-width:600px;padding:30px 60px;">
+		<!-- 这里的编辑表单和添加图书的表单是一模一样的 -->
+		<form id="ffUserEdit" method="post" action="user">
+			<input type="hidden" name="method" value="edit"/>
+			<input type="hidden" name="uid" />
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="Name" style="width:100%" 
+				data-options="label:'用户姓名:',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="Balance" style="width:100%" 
+				data-options="label:'用户余额：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="Integral" style="width:100%" 
+				data-options="label:'用户积分：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="phone" style="width:100%" 
+				data-options="label:'用户电话：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input id=LevelId style="width:100%" label="用户等级" name="Level" 
+				class="easyui-combobox" 
+					data-options="url:'user?method=userLevelList',valueField:'id',textField:'text'">
+			</div>
+			<div style="margin-bottom:20px">
+				<input id=LevelId style="width:100%" label="用户分组" name="UserGroup" 
+				class="easyui-combobox" 
+					data-options="url:'user?method=userGroupList',valueField:'id',textField:'text'">
+			</div>
+			<div style="margin-bottom:20px">
+				<input id=LevelId style="width:100%" label="用户标签" name="UserLabel" 
+				class="easyui-combobox" 
+					data-options="url:'user?method=userLabelList',valueField:'id',textField:'text'">
+			</div>
+			<div style="margin-bottom:20px">
+				<select name="UserType" label="用户类型:" style="width:100%" class="easyui-combobox">
+					<option value="1">微信公众号用户</option>
+					<option value="2">微信小程序用户</option>
+					<option value="3">H5用户</option>
+				</select>
+			</div>
+			<div style="margin-bottom:20px">
+				<select id="status" name="status" style="width:100%"  label="用户状态" class="easyui-combobox">
+					<option value='1'>正常</option>
+					<option value='2'>禁用</option>
+					<option value='3'>删除</option>
+				</select>
+			</div>
+		</form>
+		<div style="text-align:center;padding:5px 0">
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="Editsubmit()" style="width:80px">提交</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="Editclear()" style="width:80px">重置</a>
+		</div>
+		</div>
+	</div>
+	
+	<script>
+		function Editsubmit(){
+			$('#ffUserEdit').form('submit',{
+				success:function(res){//这里的res就是后端输出的0或者1
+					if(res=='0'){
+						$.messager.alert('警告','编辑失败');
+					}else if(res=='1'){
+						$.messager.alert('消息','编辑成功','info');
+						$('#ffUserEdit').form('reset');
+						//关闭窗体
+						$("#userEditWin").window('close');
+						//刷新列表
+						$("#tt").datagrid("reload");
+					}
+				}
+			});
+		}
+		function Editclear(){
+			$('#ffUserEdit').form('reset');
+		}
+	</script>
+	
+	
+	
+	<!-- 批量设置分组弹窗 -->
+	<div id="usersSetGroupWin" class="easyui-window" title="批量设置分组" style="width:600px;height:400px;" data-options="iconCls:'icon-edit',modal:true,closed:true">
+		<div class="easyui-panel"  style="width:100%;max-width:600px;padding:30px 60px;">
+		<!-- 这里的编辑表单和添加图书的表单是一模一样的 -->
+		<form id="setGroupForm" method="post" action="user">
+			<!-- 填写提交表单之后要执行的方法的名字 -->
+			<input type="hidden" name="method" value="setGroup"/>
+			<!-- 准备一个隐藏域，存储所有的要分配班级学生的id，使用“,” -->
+			<input id="uids" type="hidden" name="uids" >
+			<div style="margin-bottom:20px">
+				<input id="UserGroup" style="width:100%" label="用户分组" name="UserGroup" 
+				class="easyui-combobox" 
+					data-options="url:'user?method=userGroupList',valueField:'id',textField:'text'">
+			</div>
+		</form>
+		<div style="text-align:center;padding:5px 0">
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="submitSetGroupForm()" style="width:80px">提交</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearSetGroupForm()" style="width:80px">重置</a>
+		</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+	function submitSetGroupForm(){
+		$('#setGroupForm').form('submit',{
+			success:function(res){//这里的res就是后端输出的0或者1
+				if(res=='0'){
+					$.messager.alert('警告','设置失败');
+				}else if(res=='1'){
+					$.messager.alert('消息','设置成功','info');
+					$('#setGroupForm').form('reset');
+					//关闭窗体
+					$("#usersSetGroupWin").window('close');
+					//刷新列表
+					$("#tt").datagrid("reload");
+				}
+			}
+		});
+	}
+	function clearSetGroupForm(){
+		$('#setGroupForm').form('reset');
+	}
+	</script>
+	
+<!-- 批量设置标签弹窗 -->
+	<div id="usersSetLabelWin" class="easyui-window" title="批量设置标签" style="width:600px;height:400px;" data-options="iconCls:'icon-edit',modal:true,closed:true">
+		<div class="easyui-panel"  style="width:100%;max-width:600px;padding:30px 60px;">
+		<!-- 这里的编辑表单和添加图书的表单是一模一样的 -->
+		<form id="setLabelForm" method="post" action="user">
+			<!-- 填写提交表单之后要执行的方法的名字 -->
+			<input type="hidden" name="method" value="setLabels"/>
+			<!-- 准备一个隐藏域，存储所有的要分配班级学生的id，使用“,” -->
+			<input id="uidss" type="hidden" name="uidss" >
+			<div style="margin-bottom:20px">
+				<input id="UserLabel" style="width:100%" label="用户标签" name="UserLabel" 
+				class="easyui-combobox" 
+					data-options="url:'user?method=userLabelList',valueField:'id',textField:'text'">
+			</div>
+		</form>
+		<div style="text-align:center;padding:5px 0">
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="submitSetLabelForm()" style="width:80px">提交</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearSetLabelForm()" style="width:80px">重置</a>
+		</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+	function submitSetLabelForm(){
+		$('#setLabelForm').form('submit',{
+			success:function(res){//这里的res就是后端输出的0或者1
+				if(res=='0'){
+					$.messager.alert('警告','设置失败');
+				}else if(res=='1'){
+					$.messager.alert('消息','设置成功','info');
+					$('#setLabelForm').form('reset');
+					//关闭窗体
+					$("#usersSetLabelWin").window('close');
+					//刷新列表
+					$("#tt").datagrid("reload");
+				}
+			}
+		});
+	}
+	function clearSetLabelForm(){
+		$('#setLabelForm').form('reset');
+	}
+	</script>
+	
+<!-- 数据显示 -->
+<script type="text/javascript">
+$('#tt').datagrid({
+	columns:[[
+		{field:'ck',checkbox:true},
+		{field:'uid',title:'ID', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					return value;
+				}
+			}
+		},
+		{field:'Name',title:'姓名', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					return value;
+				}
+			}
+		},
+		{field:'Level',title:'用户等级', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					return value;
+				}
+			}
+		},
+		{field:'Balance',title:'余额', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					return value/100;
+				}
+			}
+		},
+		{field:'Integral',title:'积分', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					return value;
+				}
+			}
+		},
+		{field:'UserType',title:'用户类型', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					return  value;
+				}
+			}
+		},
+		{field:'UserGroup',title:'用户分组', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					return  value;
+				}
+			}
+		},
+		{field:'UserLabel',title:'用户标签', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					return  value;
+				}
+			}
+		},
+		{field:'status',title:'状态', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					if(value==1){return '正常'} 
+					else if(value==2){return '禁用'} 
+					else if(value==3){return '删除'}
+				}
+			}
+		}
+	]]
+	
+});
+</script>
+</body>
+</html>

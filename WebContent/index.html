@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>主页-CRMEB</title>
+<link rel="stylesheet" type="text/css"
+	href="easyui/themes/default/easyui.css">
+<link rel="stylesheet" type="text/css" href="easyui/themes/icon.css">
+<script type="text/javascript" src="easyui/jquery.min.js"></script>
+<script type="text/javascript" src="easyui/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="easyui/locale/easyui-lang-zh_CN.js"></script>
+</head>
+<body class="easyui-layout">
+	<div data-options="region:'west',split:true,title:'系统菜单'"
+		style="width: 230px; padding: 10px;">
+		<!-- 系统菜单的主DIV -->
+		<div id="sm" class="easyui-sidemenu"
+			data-options="data:data,onSelect:doMenu"></div>
+	</div>
+		
+	<div id="content" style="padding:10px;" data-options="region:'center',title:'控制台'">
+		
+	</div>
+</body>
+<script type="text/javascript">
+	//菜单的事件
+	function doMenu(item) {
+		if(item.text=='商品管理'){
+			//记载图书列表页面
+			$("#content").load("goods-list.html");
+		}else if(item.text=='商品规格'){
+			$("#content").load("Specificationlist.html");
+		}else if(item.text=='商品评论'){
+			$("#content").load("ProductReview-list.html");
+		}else if(item.text=='用户管理'){
+			$("#content").load("user-list.html");
+		}else if(item.text=='用户标签'){
+			$("#content").load("UserLabel-list.html");
+		}else if(item.text=='用户等级'){
+			$("#content").load("UserLevel-list.html");
+		}else if(item.text=='用户分组'){
+			$("#content").load("UserGroup-list.html");
+		}else if(item.text=='文章管理'){
+			
+			$("#content").load("Essaylist.html");
+		}else if(item.text=='文章分类'){
+
+			$("#content").load("Classifylist.html");
+		};
+	}
+	//系统菜单部分的JS代码
+	var data = [ {
+		text : '商品',
+		iconCls : 'icon-sum',
+		state : 'closed',
+		children : [ {
+			text : '商品管理'//菜单的名字
+		}, {
+			text : '商品规格'
+		},{
+			text : '商品评论'
+		} ]
+	} ,
+	{
+		text:'用户',
+		iconCls : 'icon-sum',
+		state:'closed',
+		children:[{
+			text:'用户管理'
+		},{
+			text:'用户标签'
+		},{
+			text:'用户等级'
+		},{
+			text:'用户分组'
+		}]
+	},
+	{
+		text:'内容',
+		iconCls : 'icon-sum',
+		state:'closed',
+		children:[{
+			text:'文章管理'
+		},{
+			text:'文章分类'
+		}]
+	}];
+</script>
+</html>

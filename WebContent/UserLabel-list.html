@@ -1,0 +1,235 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<title>等级等级</title>
+<link rel="stylesheet" type="text/css"
+	href="easyui/themes/default/easyui.css">
+<link rel="stylesheet" type="text/css" href="easyui/themes/icon.css">
+<script type="text/javascript" src="easyui/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="easyui/locale/easyui-lang-zh_CN.js"></script>
+</head>
+<body>
+<table id="tt" class="easyui-datagrid" style="widht:80%" 
+data-options="url:'userlabel',queryParams:{method:'list'},pagination:true,fitColumns:true,singleSelect:false">
+</table>
+
+<!-- 操作栏 -->
+<script type="text/javascript">
+$("table").datagrid({
+	toolbar:[{
+		iconCls:'icon-add',
+		text:'添加',
+		handler:function(){
+			$("#UserLabelAdd").window('open');
+		}
+	},{
+		iconCls:'icon-edit',
+		text:'编辑',
+		handler:function(){
+			//判断等级是否选择了数据
+			//获取选择行，如果没有选择，返回null
+			var selected = $("#tt").datagrid('getSelected');
+			if(selected==null){
+				$.messager.alert("提示","没有选择任何数据");
+				return;//结束方法
+			}
+			//到这里说明已经选择好了数据
+			//根据UserLabelId加载等级信息
+			$.ajax({
+				type:"GET",
+				url:"userlabel?method=queryById&id="+selected.id,
+				success: function(res){
+					//显示窗体
+					$("#UserLabelEditWin").window('open');
+					//回显数据
+					$("#ffUserLabelEdit").form('load',{
+						method:'edit',
+						id: res.id,
+						labelName: res.labelName,
+						status: res.status
+					});
+				}
+			});
+		}
+	},{
+		iconCls:'icon-remove',
+		text:'删除',
+		handler:function(){
+			//判断等级是否选择了数据
+			//获取选择行，如果没有选择，返回null
+			var selected = $("#tt").datagrid('getSelected');
+			if(selected==null){
+				$.messager.alert("提示","没有选择任何数据");
+				return;//结束方法
+			}
+			//让等级确认是否删除
+			$.messager.confirm('确认对话框', '您确定要删除等级:['+selected.labelName+']', function(r){
+			    if (r){
+			      	//确认删除
+			      	$.ajax({
+			      		type:"GET",
+			      		url:"userlabel?method=delete&id="+selected.id,
+			      		success:function(){
+			      			//刷新表格
+			      			$("#tt").datagrid('reload');
+			      		}
+			      	});
+			    }
+			});
+		}
+	},"-",{
+		iconCls:'icon-help',
+		handler:function(){alert('帮助');}
+	}]
+});
+</script>
+
+
+<!-- 显示  -->
+<script type="text/javascript">
+$('#tt').datagrid({
+	columns:[[
+		{field:'id',title:'ID', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.UserLabel){
+					return row.UserLabel.name;
+				} else {
+					return value;
+				}
+			}
+		},
+		{field:'labelName',title:'标签名称', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.UserLabel){
+					return row.UserLabel.name;
+				} else {
+					return value;
+				}
+			}
+		},
+		{field:'status',title:'状态', width:80,align:'center',
+			formatter: function(value,row,index){
+				if (row.user){
+					return row.user.name;
+				} else {
+					if(value==1){return '正常'} 
+					else if(value==2){return '禁用'} 
+					else if(value==3){return '删除'}
+				}
+			}
+		}
+	]]
+	
+});
+</script>
+
+
+<!-- 添加弹窗 -->
+	<div id="UserLabelAdd" class="easyui-window" title="添加等级" style="width:600px;height:242px;" data-options="iconCls:'icon-edit',modal:true,closed:true">
+		<div class="easyui-panel"  style="width:100%;max-width:600px;padding:30px 60px;">
+		<!-- 这里的编辑表单和添加图书的表单是一模一样的 -->
+		<form id="ffUserLabel" method="post" action="userlabel">
+			<input type="hidden" name="method" value="save"/>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="labelName" style="width:100%" 
+				data-options="label:'标签名称：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<select id="status" name="status" style="width:100%"  label="标签状态" class="easyui-combobox">
+					<option value='1'>正常</option>
+					<option value='2'>禁用</option>
+					<option value='3'>删除</option>
+				</select>
+			</div>
+		</form>
+		<div style="text-align:center;padding:5px 0">
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="addSubmit()" style="width:80px">提交</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="bbb()" style="width:80px">重置</a>
+		</div>
+		</div>
+	</div>
+	
+	<script type="text/javascript">
+	function addSubmit(){
+		$('#ffUserLabel').form('submit',{
+			success:function(res){//这里的res就是后端输出的0或者1
+				if(res=='1'){
+					$.messager.alert('消息','添加成功','info');
+					//$('#ffUserLabel').form('clear');
+					
+					$('#ffUserLabel').form('reset');
+					//关闭窗体
+					$("#UserLabelAdd").window('close');
+					//刷新列表
+					$("#tt").datagrid("reload");
+				}else{
+					$.messager.alert('警告','添加失败');
+				}
+			}
+		});
+	}
+	function bbb(){
+		$('#ffUserLabel').form('reset');
+	}
+</script>
+
+
+<!-- 编辑弹窗 -->
+	<div id="UserLabelEditWin" class="easyui-window" title="编辑等级"
+		style="width: 600px; height: 292px;"
+		data-options="iconCls:'icon-edit',modal:true,closed:true">
+		<div class="easyui-panel"
+			style="width: 100%; max-width: 600px; padding: 30px 60px;">
+			<!-- 这里的编辑表单和添加图书的表单是一模一样的 -->
+			<form id="ffUserLabelEdit" method="post" action="userlabel">
+				<input type="hidden" name="method" value="edit" />
+				<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="id" readonly="readonly" style="width:100%" 
+				data-options="label:'标签ID:',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="labelName" style="width:100%" 
+				data-options="label:'标签名称：',required:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<select id="status" name="status" style="width:100%"  label="标签状态" class="easyui-combobox">
+					<option value='1'>正常</option>
+					<option value='2'>禁用</option>
+					<option value='3'>删除</option>
+				</select>
+			</div>
+			</form>
+			<div style="text-align: center; padding: 5px 0">
+				<a href="javascript:void(0)" class="easyui-linkbutton"
+					onclick="Editsubmit()" style="width: 80px">提交</a> <a
+					href="javascript:void(0)" class="easyui-linkbutton"
+					onclick="Editclear()" style="width: 80px">重置</a>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		function Editsubmit() {
+			$('#ffUserLabelEdit').form('submit', {
+				success : function(res) {//这里的res就是后端输出的0或者1
+					if (res == '0') {
+						$.messager.alert('警告', '编辑失败');
+					} else if (res == '1') {
+						$.messager.alert('消息', '编辑成功', 'info');
+						$('#ffUserLabelEdit').form('reset');
+						//关闭窗体
+						$("#UserLabelEditWin").window('close');
+						//刷新列表
+						$("#tt").datagrid("reload");
+					}
+				}
+			});
+		}
+		function Editclear() {
+			$('#ffUserLabelEdit').form('reset');
+		}
+	</script>
+
+
+</body>
+</html>
